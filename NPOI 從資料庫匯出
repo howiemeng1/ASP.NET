@@ -1,0 +1,135 @@
+    Protected Sub Button1_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles Button1.Click
+        '***************************************************************************
+        '*** for Exporting to a Excel file
+        Dim workbook As HSSFWorkbook = New HSSFWorkbook()
+        Dim ms As MemoryStream = New MemoryStream()  '==需要 System.IO命名空間
+
+        '== 新增試算表 Sheet名稱。
+        Dim u_sheet As HSSFSheet = workbook.CreateSheet("My Sheet")
+
+        '欄位寬度
+        u_sheet.SetColumnWidth(1, 5000)
+        u_sheet.SetColumnWidth(2, 5000)
+        u_sheet.SetColumnWidth(4, 5000)
+        u_sheet.SetColumnWidth(5, 5000)
+        u_sheet.SetColumnWidth(6, 5000)
+
+        
+
+
+
+        '***************************************************************************
+
+        '=======微軟SDK文件的範本=======
+        Dim Conn As SqlConnection = New SqlConnection
+        '----上面已經事先寫好 Imports System.Web.Configuration ----
+        Conn.ConnectionString = "Data Source=.;Initial Catalog=ZMIMap;Persist Security Info=True;User ID=CLINK;Password=CLINK@82262010"
+        '----或是寫成下面這一行 (連結資料庫)----
+        'Dim Conn As New SqlConnection(WebConfigurationManager.ConnectionStrings("testConnectionString").ConnectionString.ToString())
+
+        Dim dr As SqlDataReader = Nothing
+
+        Dim cmd As SqlCommand
+        cmd = New SqlCommand(SqlDataSource1.SelectCommand, Conn)
+        '---- 或是寫成這一行 Dim cmd As New SqlCommand("select id,test_time,summary,author from test", Conn)
+
+        Try
+            Conn.Open()   '---- 這時候才連結DB
+
+            dr = cmd.ExecuteReader()   '---- 這時候執行SQL指令，取出資料
+
+            '===============================================
+            '== 利用迴圈，把資料寫入 Excel各個儲存格裡面。
+            Dim k As Integer = 0
+
+            While dr.Read()
+                For i = 0 To (dr.FieldCount - 1)
+                    Dim style1 As HSSFCellStyle = workbook.CreateCellStyle()
+                    Dim font As HSSFFont = CType(workbook.CreateFont(), HSSFFont)
+                    font.Color = NPOI.HSSF.Util.HSSFColor.RED.index    '字的顏色
+                    font.FontName = "微軟正黑體"    '字型
+                    style1.SetFont(font)
+                    style1.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.YELLOW.index2  '==藍色底的儲存格
+                    style1.FillPattern = HSSFCellStyle.SOLID_FOREGROUND
+
+                    Dim style2 As HSSFCellStyle = workbook.CreateCellStyle()
+                    style2.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.YELLOW.index2  '==黃色底的儲存格
+                    style2.FillPattern = HSSFCellStyle.SOLID_FOREGROUND
+
+                    Dim cell As HSSFCell = u_sheet.CreateRow(k).CreateCell(i)
+                    Dim cel0 As HSSFCell = u_sheet.CreateRow(0).CreateCell(i) ' 空出第一行 插入表頭
+
+                    Dim cel00 As HSSFCell = u_sheet.CreateRow(0).CreateCell(0)
+                    cel00.CellStyle = style2
+                    cel00.SetCellValue("編號")
+                    Dim cel01 As HSSFCell = u_sheet.CreateRow(0).CreateCell(1)
+                    cel01.CellStyle = style2
+                    cel01.SetCellValue("車牌號碼")
+                    Dim cel02 As HSSFCell = u_sheet.CreateRow(0).CreateCell(2)
+                    cel02.CellStyle = style2
+                    cel02.SetCellValue("編號")
+                    Dim cel03 As HSSFCell = u_sheet.CreateRow(0).CreateCell(3)
+                    cel03.CellStyle = style2
+                    cel03.SetCellValue("位置")
+                    Dim cel04 As HSSFCell = u_sheet.CreateRow(0).CreateCell(4)
+                    cel04.CellStyle = style2
+                    cel04.SetCellValue("分局")
+                    Dim cel05 As HSSFCell = u_sheet.CreateRow(0).CreateCell(5)
+                    cel05.CellStyle = style2
+                    cel05.SetCellValue("派出所")
+                    Dim cel06 As HSSFCell = u_sheet.CreateRow(0).CreateCell(6)
+                    cel06.CellStyle = style2
+                    cel06.SetCellValue("創立時間")
+                    Dim cel07 As HSSFCell = u_sheet.CreateRow(0).CreateCell(7)
+                    cel07.CellStyle = style2
+                    cel07.SetCellValue("圖片")
+                    Dim cel08 As HSSFCell = u_sheet.CreateRow(0).CreateCell(8)
+                    cel08.CellStyle = style2
+                    cel08.SetCellValue("經度")
+                    Dim cel09 As HSSFCell = u_sheet.CreateRow(0).CreateCell(9)
+                    cel09.CellStyle = style2
+                    cel09.SetCellValue("緯度")
+                    'cel0.SetCellValue("序號")
+                    '-- FieldCount是指 DataReader每一列紀錄裡面，有幾個欄位。
+                    'cell.CellStyle = style2
+                    'cel0.CellStyle = style1  '只有第一列改變
+                    'cel0.SetCellValue(dr.GetValue(i).ToString())
+                    cell.SetCellValue(dr.GetValue(i).ToString())  '*** for Exporting to a Excel file
+                Next
+                k = k + 1
+            End While
+
+            '== 建立儲存格樣式（底色）。
+            
+            '===============================================
+
+        Catch ex As Exception   '---- 如果程式有錯誤或是例外狀況，將執行這一段
+            Response.Write("<b>Error Message----  </b>" + ex.ToString() + "<HR/>")
+
+        Finally
+            If Not (dr Is Nothing) Then
+                cmd.Cancel()
+                '----關閉DataReader之前，一定要先「取消」SqlCommand
+                dr.Close()
+            End If
+
+            If (Conn.State = ConnectionState.Open) Then
+                Conn.Close()
+                Conn.Dispose() '---- 一開始宣告有用到 New的,最後必須以 .Dispose()結束
+            End If
+        End Try
+
+        '***************************************************************************
+        '*** for Exporting to a Excel file
+        workbook.Write(ms)
+
+        '== Excel檔名，請寫在最後面 filename的地方
+        Response.AddHeader("Content-Disposition", String.Format("attachment; filename=EmptyWorkbook_2_DB.xls"))
+        Response.BinaryWrite(ms.ToArray())
+
+        '== 釋放資源
+        workbook = Nothing   '== C#為 null
+        ms.Close()
+        ms.Dispose()
+
+    End Sub
