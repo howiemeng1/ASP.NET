@@ -1,0 +1,19 @@
+非常簡單套用的js放大燈箱效果套件
+1、先去FancyBox官網下載套件，或是直接用說明中連結也行!
+    網址：http://fancyapps.com/fancybox/3/
+    
+2、於需要使用燈箱效果圖片下方加入js跟css引入連結
+
+    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+    
+3、在圖片加上<a>標籤加上data-fancybox="gallery"設定即可
+
+    <a data-fancybox="gallery" href="big_1.jpg"><img src="small_1.jpg"></a>
+    <a data-fancybox="gallery" href="big_2.jpg"><img src="small_2.jpg"></a>
+
+4、<a>中的連結為大圖的url位置，img的src為小縮圖的 url位置
+    這樣就ok了，要單獨用還是整合圖片播放器用都可以!
