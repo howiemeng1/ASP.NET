@@ -1,0 +1,193 @@
+Sub excelsome()
+        '***************************************************************************
+        '*** for Exporting to a Excel file
+        Dim workbook As HSSFWorkbook = New HSSFWorkbook()
+        Dim ms As MemoryStream = New MemoryStream()  '==需要 System.IO命名空間
+
+        '== 新增試算表 Sheet名稱。
+        Dim u_sheet As HSSFSheet = workbook.CreateSheet("My Sheet")
+
+        '欄位寬度()
+        u_sheet.SetColumnWidth(1, 4000)
+        u_sheet.SetColumnWidth(2, 4000)
+        u_sheet.SetColumnWidth(3, 4000)
+        u_sheet.SetColumnWidth(4, 4000)
+        u_sheet.SetColumnWidth(5, 4500)
+        u_sheet.SetColumnWidth(6, 4000)
+        u_sheet.SetColumnWidth(7, 4000)
+        u_sheet.SetColumnWidth(8, 4000)
+        u_sheet.SetColumnWidth(9, 4000)
+        u_sheet.SetColumnWidth(10, 4000)
+        u_sheet.SetColumnWidth(11, 4000)
+
+        Try
+            Dim rowHeader As HSSFRow = u_sheet.CreateRow(0)
+            For i As Integer = 0 To GridView3.HeaderRow.Cells.Count - 1
+                '若有啟用排序，Header會變成 LinkButton
+                'LinkButton lb = null;
+                'if (gv.HeaderRow.Cells[i].Controls.Count > 0)
+                '{
+                ' lb = gv.HeaderRow.Cells[i].Controls[0] as LinkButton;
+                '}
+                'string strValue = (lb != null) ? lb.Text : gv.HeaderRow.Cells[i].Text;
+                Dim strValue As String = GridView3.HeaderRow.Cells(i).Text
+                Dim cell As HSSFCell = CType(rowHeader.CreateCell(i), HSSFCell)
+                cell.SetCellValue(HttpUtility.HtmlDecode(strValue).Trim())
+
+                '建立新的CellStyle
+                Dim CellsStyle As HSSFCellStyle = workbook.CreateCellStyle()
+                Dim font As HSSFFont = CType(workbook.CreateFont(), HSSFFont)
+                font.Color = NPOI.HSSF.Util.HSSFColor.RED.index    '字的顏色
+                font.FontName = "微軟正黑體"    '字型
+                CellsStyle.SetFont(font)
+                CellsStyle.VerticalAlignment = VerticalAlign.Top '文字水平置中
+                CellsStyle.Alignment = HorizontalAlign.Center '文字垂直置中
+                CellsStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.YELLOW.index2  '==黃底的儲存格
+                CellsStyle.FillPattern = HSSFCellStyle.SOLID_FOREGROUND
+                '邊框 框線
+                CellsStyle.BorderTop = BorderStyle.Dotted
+                CellsStyle.BorderLeft = BorderStyle.Dotted
+                CellsStyle.BorderRight = BorderStyle.Dotted
+                CellsStyle.BorderBottom = BorderStyle.Dotted
+
+                '邊框顏色
+                CellsStyle.LeftBorderColor = BLACK.index
+                CellsStyle.RightBorderColor = BLACK.index
+                CellsStyle.BottomBorderColor = BLACK.index
+                CellsStyle.TopBorderColor = BLACK.index
+
+                cell.CellStyle = CellsStyle
+            Next
+            'DATAROW
+            For i As Integer = 0 To GridView3.Rows.Count - 1
+                Dim rowItem As HSSFRow = CType(u_sheet.CreateRow(i + 1), HSSFRow)
+
+                For j As Integer = 0 To GridView3.HeaderRow.Cells.Count - 1
+                    Dim lb As Label = Nothing  ' 因為GridView中有TemplateField，所以要將Label.Text讀出來
+
+                    If GridView3.Rows(i).Cells(j).Controls.Count > 1 Then
+                        lb = TryCast(GridView3.Rows(i).Cells(j).Controls(1), Label)
+                    End If
+
+                    Dim value1 As String = If(lb IsNot Nothing, HttpUtility.HtmlDecode(lb.Text), HttpUtility.HtmlDecode(GridView3.Rows(i).Cells(j).Text).Trim())
+                    Dim intry = 0
+                    Dim isNumeric = Not value1.StartsWith("0") AndAlso Integer.TryParse(value1, intry)
+
+                    Dim cell As HSSFCell = CType(rowItem.CreateCell(j), HSSFCell)
+
+                    'If String.IsNullOrEmpty(value1.Trim()) Then
+                    '    '空白
+                    '    cell.SetCellValue(Convert.ToString(""))
+                    'ElseIf Not isNumeric Then
+
+                    '    If value1.Length > 10 Then
+                    '        '文字格式
+                    '        u_sheet.SetColumnWidth(j, 50 * 256) '欄位寬度設為50
+                    '    ElseIf value1.Length > 3 Then
+                    '        '文字格式
+                    '        u_sheet.SetColumnWidth(j, 30 * 256) '欄位寬度設為30
+                    '    Else
+                    '        '文字格式
+                    '        u_sheet.SetColumnWidth(j, 15 * 256) '欄位寬度設為15
+                    '    End If
+
+
+                    u_sheet.DefaultRowHeight = 15 * 256
+
+                    Dim cellStyle As HSSFCellStyle = CType(workbook.CreateCellStyle(), HSSFCellStyle) ' 給cell style
+                    Dim format As HSSFDataFormat = CType(workbook.CreateDataFormat(), HSSFDataFormat)
+                    cellStyle.DataFormat = format.GetFormat("@") ' 文字格式
+
+
+                    Dim CellsStyle As HSSFCellStyle = workbook.CreateCellStyle()
+                    Dim font As HSSFFont = CType(workbook.CreateFont(), HSSFFont)
+                    font.Color = NPOI.HSSF.Util.HSSFColor.BLACK.index    '字的顏色
+                    font.FontName = "微軟正黑體"    '字型
+                    CellsStyle.SetFont(font)
+                    CellsStyle.VerticalAlignment = VerticalAlign.Top '文字水平置中
+                    CellsStyle.Alignment = HorizontalAlign.Center '文字垂直置中
+                    'CellsStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.YELLOW.index2  '==黃底的儲存格
+                    'CellsStyle.FillPattern = HSSFCellStyle.SOLID_FOREGROUND
+                    '自動換行
+                    CellsStyle.WrapText = True
+                    '邊框 框線
+                    CellsStyle.BorderTop = BorderStyle.Dotted
+                    CellsStyle.BorderLeft = BorderStyle.Dotted
+                    CellsStyle.BorderRight = BorderStyle.Dotted
+                    CellsStyle.BorderBottom = BorderStyle.Dotted
+
+                    '邊框顏色
+                    CellsStyle.LeftBorderColor = BLACK.index
+                    CellsStyle.RightBorderColor = BLACK.index
+                    CellsStyle.BottomBorderColor = BLACK.index
+                    CellsStyle.TopBorderColor = BLACK.index
+                    cell.CellStyle = CellsStyle
+                    cell.SetCellValue(value1)
+
+                    '隱藏欄位
+                    u_sheet.SetColumnHidden(2, True)
+                    u_sheet.SetColumnHidden(6, True)
+
+                    'Else
+                    '數字格式
+                    'cell.SetCellValue(intry)
+                    '自訂呈現格式
+                    'XSSFCellStyle cellStyle = (XSSFCellStyle)workbook.CreateCellStyle(); // 給cell style
+                    'XSSFDataFormat format = (XSSFDataFormat)workbook.CreateDataFormat();
+                    'cellStyle.DataFormat = format.GetFormat("#,##0;[RED](#,##0)");
+                    'cell.CellStyle = cellStyle;
+                    'End If
+                Next
+            Next
+
+
+            '插入圖片
+            Dim patriarch As HSSFPatriarch = u_sheet.CreateDrawingPatriarch() '只能呼叫一次
+            For q As Integer = 0 To GridView3.Rows.Count - 1
+                Dim QQ As String = Nothing  ' 因為GridView中有TemplateField，所以要將Label.Text讀出來
+                QQ = GridView3.Rows(q).Cells(8).Text
+                Dim bytes = File.ReadAllBytes("C:\Users\MIS\Documents\visual studio 2012\Projects\WebApplication3\車辨網頁\Images\" + QQ)
+                Dim pictureIdx As Integer = workbook.AddPicture(bytes, HSSFWorkbook.PICTURE_TYPE_JPEG)
+
+                'create sheet
+
+
+                ' Create the drawing patriarch.  This is the top level container for all shapes. 
+                ' Dim patriarch As HSSFPatriarch = u_sheet.CreateDrawingPatriarch()
+
+                'add a picture
+                Dim anchor As HSSFClientAnchor = New HSSFClientAnchor(0, 0, 0, 0, 8, q + 1, 9, q + 2)
+                Dim pict As HSSFPicture = patriarch.CreatePicture(anchor, pictureIdx)
+                'pict.Resize()
+
+            Next
+
+
+
+
+
+            '===============================================
+
+        Catch ex As Exception   '---- 如果程式有錯誤或是例外狀況，將執行這一段
+            Response.Write("<b>Error Message----  </b>" + ex.ToString() + "<HR/>")
+
+        Finally
+
+        End Try
+
+        '***************************************************************************
+        '*** for Exporting to a Excel file
+        workbook.Write(ms)
+
+        Dim filename123 As String = DateTime.Today.ToShortDateString() + "_" + FormatDateTime(Now, DateFormat.ShortTime)
+
+        '== Excel檔名，請寫在最後面 filename的地方
+        Response.AddHeader("Content-Disposition", String.Format("attachment; filename=" + filename123 + ".xls"))
+        Response.BinaryWrite(ms.ToArray())
+
+        '== 釋放資源
+        workbook = Nothing   '== C#為 null
+        ms.Close()
+        ms.Dispose()
+
+    End Sub
