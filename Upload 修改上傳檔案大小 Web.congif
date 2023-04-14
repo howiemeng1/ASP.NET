@@ -1,0 +1,14 @@
+修改
+<httpRuntime maxRequestLength="2147483647" executionTimeout="300" />    '修改成2G 及 最多等待300秒
+
+
+IIS7之後須多加入
+
+<system.webServer>
+    <security>
+      <requestFiltering>
+        <requestLimits maxAllowedContentLength="2147483647" />        '2G
+      </requestFiltering>
+    </security>
+  </system.webServer>
+
