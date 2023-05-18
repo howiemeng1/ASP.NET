@@ -1,0 +1,181 @@
+.aspx
+<body>
+    <div >
+        <table align="center">
+            <tr>
+                <td align="center">
+                    <asp:Label ID="Label1" runat="server" Text="現有設備" Font-Size="X-Large" Font-Bold="True" Font-Names="微軟正黑體"></asp:Label>
+                    <br/>
+                    <asp:ListBox ID="ListBox1" runat="server" DataTextField="DVRName" DataValueField="DVRName" Height="214px" Width="280px"></asp:ListBox>
+                </td>
+                <td align="center">
+                    <asp:Button ID="Button1" runat="server" Text="&gt;&gt;" />                   
+                    <br/>
+                    <asp:Button ID="Button2" runat="server" Text="&lt;&lt;" />             
+                </td>
+                <td align="center">
+                    <asp:Label ID="Label2" runat="server" Font-Size="X-Large" Font-Bold="True" Font-Names="微軟正黑體"></asp:Label>
+                    <br/>
+                    <asp:ListBox ID="ListBox2" runat="server" DataTextField="DVRName" DataValueField="DVRName" Height="214px" Width="280px"></asp:ListBox>
+                </td>
+            </tr>
+            <tr >
+                <td colspan="3" align="center">
+                    <asp:Button ID="Button3" runat="server" Text="確定" />
+                </td>
+            </tr>
+        </table>
+
+
+        <br />
+        <asp:Label ID="Label3" runat="server"></asp:Label>
+        
+    </div>
+    
+</body>
+
+
+
+
+
+
+.vb
+Public Class Equ_Group2_1
+    Inherits System.Web.UI.Page
+
+    Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+
+        Label2.Text = " 群組 :" & Session("groupname")
+
+
+        If Not Page.IsPostBack Then
+
+            '連listbox1 and 2
+            Dim Conn As New SqlConnection(WebConfigurationManager.ConnectionStrings("equConnectionString").ConnectionString.ToString)
+            Conn.Open()   '---- 連結DB
+
+            Dim cmd As SqlCommand = New SqlCommand("select Expr4,DVRName from test1 where Expr4 = '" & Session("groupname") & "' ", Conn)
+            Dim cmd2 As SqlCommand = New SqlCommand("select Expr4,DVRName from test1 where Expr4 <> '" & Session("groupname") & "'or Expr4 is null ", Conn)
+            Dim dr As SqlDataReader = cmd.ExecuteReader()   '---- 執行SQL指令，取出資料
+
+            '-- 註解：執行SQL指令之後，把資料庫撈出來的結果，交由ListBox控制項來呈現()
+            ListBox2.DataSource = dr
+            ListBox2.DataBind()
+            cmd.Cancel()
+            dr.Close()
+
+            Dim dr2 As SqlDataReader = cmd2.ExecuteReader()
+            ListBox1.DataSource = dr2
+            ListBox1.DataBind()
+            cmd2.Cancel()
+            dr2.Close()
+
+            Conn.Close()
+
+
+        End If
+
+        
+
+
+    End Sub
+
+
+    Protected Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+        '== 右移 ==
+        Dim a As Integer = 0
+        If ListBox1.Items.Count = 0 Then
+            'Label1.Text = "<font color=red>警告！ListBox1已經沒有子選項</font>"
+        End If
+
+        '**********************************************************
+        '*** 改用反迴圈（由大到小）來執行，即可。
+        '**********************************************************
+        For i As Integer = (ListBox1.Items.Count - 1) To 0 Step -1
+            If ListBox1.Items(i).Selected Then  '==判定哪一個子選項被點選了。
+                ListBox2.Items.Add(ListBox1.Items(i))
+                a = a + 1
+
+                ListBox1.Items.Remove(ListBox1.Items(i))
+                '==被搬移走了，這個子選項就該移除！
+            End If
+        Next
+
+        If a = 0 Then
+            'Label1.Text = "<font color=red>警告！您未點選任何一個子選項</font>"
+        Else
+            ' Label1.Text = "<font color=blue>移動成功</font>"
+        End If
+
+    End Sub
+
+    Protected Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
+        '== 左移 ==
+        Dim b As Integer = 0
+        If ListBox2.Items.Count = 0 Then
+            'Label2.Text = "<font color=red>警告！ListBox2已經沒有子選項</font>"
+        End If
+
+        '**********************************************************
+        '*** 改用反迴圈（由大到小）來執行，即可。
+        '**********************************************************
+
+
+        '開資料庫，左移直接移除
+        Dim conn As SqlConnection = Nothing
+        conn = New SqlConnection("Data Source=.;Initial Catalog=equ;Integrated Security=True")
+        conn.Open()
+        Dim cmd As New SqlCommand
+        Dim dbRead As Integer
+
+        Dim SqlTxt As String = Nothing
+
+        For j As Integer = (ListBox2.Items.Count - 1) To 0 Step -1
+            If ListBox2.Items(j).Selected Then  '==判定哪一個子選項被點選了。
+                ListBox1.Items.Add(ListBox2.Items(j))
+                b = b + 1
+
+                SqlTxt &= "UPDATE equGroup SET EquGroup='' WHERE DVRName='" & ListBox2.Items(j).Text & "';"
+                '移除改成空白
+                cmd = New SqlCommand(SqlTxt, conn)
+                dbRead = cmd.ExecuteNonQuery()
+                conn.Close()
+
+
+                ListBox2.Items.Remove(ListBox2.Items(j))
+                '==被搬移走了，這個子選項就該移除！
+
+            End If
+        Next
+
+        If b = 0 Then
+            'Label2.Text = "<font color=red>警告！您未點選任何一個子選項</font>"
+        Else
+            'Label2.Text = "<font color=green>移動成功</font>"
+        End If
+
+    End Sub
+
+    Protected Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
+
+        Dim conn As SqlConnection = Nothing
+        conn = New SqlConnection("Data Source=.;Initial Catalog=equ;Integrated Security=True")
+        conn.Open()
+        Dim cmd As New SqlCommand
+        Dim dbRead As Integer
+        Dim i As Integer
+
+        Dim SqlTxt As String = Nothing
+        For i = 0 To (ListBox2.Items.Count - 1)
+            SqlTxt &= "UPDATE equGroup SET EquGroup='" & Session("groupid") & "' WHERE DVRName='" & ListBox2.Items(i).Text & "';"
+            Label3.Text = SqlTxt
+        Next
+
+        cmd = New SqlCommand(SqlTxt, conn)
+        dbRead = cmd.ExecuteNonQuery()
+        conn.Close()
+
+        Response.Redirect("~/Equ_Group2.aspx")
+    End Sub
+
+End Class
