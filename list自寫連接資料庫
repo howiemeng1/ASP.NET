@@ -1,0 +1,28 @@
+.aspx
+ <asp:ListBox ID="ListBox1" runat="server" DataTextField="title" DataValueField="id"></asp:ListBox>
+ 
+ DataTextField="title  跟 DataValueField="id" 要自行設定
+ 
+ 
+ 
+ 
+ .VB
+ If Not Page.IsPostBack Then
+
+            '連listbox2
+            Dim Conn As New SqlConnection(WebConfigurationManager.ConnectionStrings("equConnectionString").ConnectionString.ToString)
+            Conn.Open()   '---- 連結DB
+
+            Dim cmd As SqlCommand = New SqlCommand("select Expr4,DVRName from test1 where Expr4 = '" & Session("groupname") & "' ", Conn)
+            '
+            
+            Dim dr As SqlDataReader = cmd.ExecuteReader()   '---- 執行SQL指令，取出資料
+
+            '-- 註解：執行SQL指令之後，把資料庫撈出來的結果，交由ListBox控制項來呈現()
+            ListBox2.DataSource = dr
+            ListBox2.DataBind()
+
+            cmd.Cancel()
+            dr.Close()
+            Conn.Close()
+        End If
