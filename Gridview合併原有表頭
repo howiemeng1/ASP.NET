@@ -1,0 +1,15 @@
+ .VB
+ Private Sub GridView1_RowCreated(sender As Object, e As GridViewRowEventArgs) Handles GridView1.RowCreated
+        If e.Row.RowType = DataControlRowType.Header Then
+            '把原本GridView表頭欄位合併
+
+            e.Row.Cells.RemoveAt(4)
+            '把原本表頭要刪除的欄位刪了
+
+            'e.Row.Cells(3).Text = "QQ"
+            '表頭名稱
+        
+            
+            e.Row.Cells(3).ColumnSpan = 2
+        End If
+    End Sub
