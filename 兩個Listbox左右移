@@ -1,0 +1,107 @@
+.aspx
+<body>
+    <form id="form1" runat="server">
+    <div>
+        <asp:ListBox ID="ListBox1" runat="server" AppendDataBoundItems="True" DataSourceID="SqlDataSource1" DataTextField="DVRName" DataValueField="DVRName" Height="249px" SelectionMode="Multiple" Width="227px"></asp:ListBox>
+    &nbsp;<asp:Button ID="Button1" runat="server" Text="&gt;&gt;&gt;" />
+&nbsp;
+        <asp:Label ID="Label1" runat="server" Text="Label"></asp:Label>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <asp:Button ID="Button2" runat="server" Text="&lt;&lt;&lt;" />
+        <asp:ListBox ID="ListBox2" runat="server" AppendDataBoundItems="True" DataSourceID="SqlDataSource2" DataTextField="DVRName" DataValueField="DVRName" Height="223px" SelectionMode="Multiple" Width="242px"></asp:ListBox>
+        <asp:Label ID="Label2" runat="server" Text="Label"></asp:Label>
+        <asp:SqlDataSource ID="SqlDataSource2" runat="server" ConnectionString="<%$ ConnectionStrings:equConnectionString %>" SelectCommand="SELECT [Expr4], [DVRName] FROM [test1] WHERE ([Expr4] = @Expr4)">
+            <SelectParameters>
+                <asp:Parameter DefaultValue="A" Name="Expr4" Type="String" />
+            </SelectParameters>
+        </asp:SqlDataSource>
+        <asp:SqlDataSource ID="SqlDataSource1" runat="server" ConnectionString="<%$ ConnectionStrings:equConnectionString %>" SelectCommand="SELECT [ID], [DVRName], [Expr4] FROM [test1]"></asp:SqlDataSource>
+        <asp:Button ID="Button3" runat="server" Text="Button" />
+        <br />
+        <asp:Label ID="Label3" runat="server" Text="Label"></asp:Label>
+    </div>
+    </form>
+</body>
+
+
+
+
+.VB
+Protected Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+        '== 右移 ==
+        Dim a As Integer = 0
+        If ListBox1.Items.Count = 0 Then
+            Label1.Text = "<font color=red>警告！ListBox1已經沒有子選項</font>"
+        End If
+
+        '**********************************************************
+        '*** 改用反迴圈（由大到小）來執行，即可。
+        '**********************************************************
+        For i As Integer = (ListBox1.Items.Count - 1) To 0 Step -1
+            If ListBox1.Items(i).Selected Then  '==判定哪一個子選項被點選了。
+                ListBox2.Items.Add(ListBox1.Items(i))
+                a = a + 1
+
+                ListBox1.Items.Remove(ListBox1.Items(i))
+                '==被搬移走了，這個子選項就該移除！
+            End If
+        Next
+
+        If a = 0 Then
+            Label1.Text = "<font color=red>警告！您未點選任何一個子選項</font>"
+        Else
+            Label1.Text = "<font color=blue>移動成功</font>"
+        End If
+
+    End Sub
+
+    Protected Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
+        '== 左移 ==
+        Dim b As Integer = 0
+        If ListBox2.Items.Count = 0 Then
+            Label2.Text = "<font color=red>警告！ListBox2已經沒有子選項</font>"
+        End If
+
+        '**********************************************************
+        '*** 改用反迴圈（由大到小）來執行，即可。
+        '**********************************************************
+        For j As Integer = (ListBox2.Items.Count - 1) To 0 Step -1
+            If ListBox2.Items(j).Selected Then  '==判定哪一個子選項被點選了。
+                ListBox1.Items.Add(ListBox2.Items(j))
+                b = b + 1
+
+                ListBox2.Items.Remove(ListBox2.Items(j))
+                '==被搬移走了，這個子選項就該移除！
+
+            End If
+        Next
+
+        If b = 0 Then
+            Label2.Text = "<font color=red>警告！您未點選任何一個子選項</font>"
+        Else
+            Label2.Text = "<font color=green>移動成功</font>"
+        End If
+
+    End Sub
+
+    Protected Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
+
+        Dim conn As SqlConnection = Nothing
+        conn = New SqlConnection("Data Source=.;Initial Catalog=equ;Integrated Security=True")
+        conn.Open()
+        Dim cmd As New SqlCommand
+        Dim dbRead As Integer
+        Dim i As Integer
+
+        Dim SqlTxt As String = Nothing
+        For i = 0 To (ListBox2.Items.Count - 1)
+            SqlTxt &= "UPDATE equGroup SET EquGroup='1' WHERE DVRName='" & ListBox2.Items(i).Text & "';"
+            'Label3.Text = SqlTxt
+        Next
+
+        cmd = New SqlCommand(SqlTxt, conn)
+        dbRead = cmd.ExecuteNonQuery()
+        conn.Close()
+
+
+    End Sub
