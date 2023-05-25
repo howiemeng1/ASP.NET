@@ -1,12 +1,26 @@
+說明:第二版修改為一對多群組設定，按下確定後才會對資料庫進行修改
+
+
+
 .aspx
+<%@ Page Title="" Language="vb" AutoEventWireup="false" MasterPageFile="~/Site1.Master" CodeBehind="Equ_Group3_1.aspx.vb" Inherits="howielogin.Equ_Group3_1" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder3" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+
+ <style>
+
+ </style>
+<html xmlns="http://www.w3.org/1999/xhtml">
 <body>
-    <div >
+    <div>
         <table align="center">
             <tr>
                 <td align="center">
                     <asp:Label ID="Label1" runat="server" Text="現有設備" Font-Size="X-Large" Font-Bold="True" Font-Names="微軟正黑體"></asp:Label>
                     <br/>
-                    <asp:ListBox ID="ListBox1" runat="server" DataTextField="DVRName" DataValueField="DVRName" Height="214px" Width="280px"></asp:ListBox>
+                    <asp:ListBox ID="ListBox1" runat="server" DataTextField="DeviceName" DataValueField="equID" Height="214px" Width="280px" SelectionMode="Multiple"></asp:ListBox>
                 </td>
                 <td align="center">
                     <asp:Button ID="Button1" runat="server" Text="&gt;&gt;" />                   
@@ -16,12 +30,19 @@
                 <td align="center">
                     <asp:Label ID="Label2" runat="server" Font-Size="X-Large" Font-Bold="True" Font-Names="微軟正黑體"></asp:Label>
                     <br/>
-                    <asp:ListBox ID="ListBox2" runat="server" DataTextField="DVRName" DataValueField="DVRName" Height="214px" Width="280px"></asp:ListBox>
+                    <asp:ListBox ID="ListBox2" runat="server" DataTextField="DeviceName" DataValueField="equID" Height="214px" Width="280px" SelectionMode="Multiple"></asp:ListBox>
                 </td>
             </tr>
             <tr >
-                <td colspan="3" align="center">
-                    <asp:Button ID="Button3" runat="server" Text="確定" />
+                <td colspan="3" >
+                    <div align="left">
+                        <asp:Button ID="Button4" runat="server" Text="新增設備" />
+                    </div>
+                    <div align="center">
+                        <asp:Button ID="Button3" runat="server" Text="確定" />
+                        <asp:Button ID="Button5" runat="server" Text="取消" />
+                    </div>
+                    
                 </td>
             </tr>
         </table>
@@ -33,6 +54,12 @@
     </div>
     
 </body>
+</html>
+</asp:Content>
+
+
+
+
 
 
 
@@ -40,7 +67,10 @@
 
 
 .vb
-Public Class Equ_Group2_1
+Imports System.Data.SqlClient
+Imports System.Web.Configuration
+
+Public Class Equ_Group3_1
     Inherits System.Web.UI.Page
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
@@ -51,11 +81,11 @@ Public Class Equ_Group2_1
         If Not Page.IsPostBack Then
 
             '連listbox1 and 2
-            Dim Conn As New SqlConnection(WebConfigurationManager.ConnectionStrings("equConnectionString").ConnectionString.ToString)
+            Dim Conn As New SqlConnection(WebConfigurationManager.ConnectionStrings("AI_integrationConnectionString").ConnectionString.ToString)
             Conn.Open()   '---- 連結DB
 
-            Dim cmd As SqlCommand = New SqlCommand("select Expr4,DVRName from test1 where Expr4 = '" & Session("groupname") & "' ", Conn)
-            Dim cmd2 As SqlCommand = New SqlCommand("select Expr4,DVRName from test1 where Expr4 <> '" & Session("groupname") & "'or Expr4 is null ", Conn)
+            Dim cmd As SqlCommand = New SqlCommand("SELECT  equID,DeviceName, GroupName FROM EquTotal  WHERE GroupName = '" & Session("groupname") & "' ", Conn)
+            Dim cmd2 As SqlCommand = New SqlCommand("SELECT DISTINCT  E.equID, E.DeviceName, G.GroupName FROM EquTotal AS E LEFT JOIN ( SELECT equID, GroupName FROM EquTotal WHERE GroupName = '" & Session("groupname") & "' ) AS G ON E.equID = G.equID WHERE G.GroupName <> '" & Session("groupname") & "' OR G.GroupName IS NULL;", Conn)
             Dim dr As SqlDataReader = cmd.ExecuteReader()   '---- 執行SQL指令，取出資料
 
             '-- 註解：執行SQL指令之後，把資料庫撈出來的結果，交由ListBox控制項來呈現()
@@ -75,7 +105,7 @@ Public Class Equ_Group2_1
 
         End If
 
-        
+
 
 
     End Sub
@@ -121,31 +151,16 @@ Public Class Equ_Group2_1
         '**********************************************************
 
 
-        '開資料庫，左移直接移除
-        Dim conn As SqlConnection = Nothing
-        conn = New SqlConnection("Data Source=.;Initial Catalog=equ;Integrated Security=True")
-        conn.Open()
-        Dim cmd As New SqlCommand
-        Dim dbRead As Integer
-
-        Dim SqlTxt As String = Nothing
-
         For j As Integer = (ListBox2.Items.Count - 1) To 0 Step -1
             If ListBox2.Items(j).Selected Then  '==判定哪一個子選項被點選了。
                 ListBox1.Items.Add(ListBox2.Items(j))
                 b = b + 1
 
-                SqlTxt &= "UPDATE equGroup SET EquGroup='' WHERE DVRName='" & ListBox2.Items(j).Text & "';"
-                '移除改成空白
-                cmd = New SqlCommand(SqlTxt, conn)
-                dbRead = cmd.ExecuteNonQuery()
-                conn.Close()
-
-
                 ListBox2.Items.Remove(ListBox2.Items(j))
                 '==被搬移走了，這個子選項就該移除！
-
             End If
+
+
         Next
 
         If b = 0 Then
@@ -158,16 +173,46 @@ Public Class Equ_Group2_1
 
     Protected Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
 
-        Dim conn As SqlConnection = Nothing
-        conn = New SqlConnection("Data Source=.;Initial Catalog=equ;Integrated Security=True")
-        conn.Open()
+
+        Dim Conn As New SqlConnection(WebConfigurationManager.ConnectionStrings("AI_integrationConnectionString").ConnectionString.ToString)
+        Conn.Open()
         Dim cmd As New SqlCommand
         Dim dbRead As Integer
         Dim i As Integer
 
         Dim SqlTxt As String = Nothing
+        SqlTxt &= "delete from [dbo].[EquDevice]  where GroupID = '" & Session("groupid") & "' ;"
+
         For i = 0 To (ListBox2.Items.Count - 1)
-            SqlTxt &= "UPDATE equGroup SET EquGroup='" & Session("groupid") & "' WHERE DVRName='" & ListBox2.Items(i).Text & "';"
+
+            SqlTxt &= "INSERT INTO [dbo].[EquDevice]([equID],[GroupID])VALUES('" & ListBox2.Items(i).Value & "' ,'" & Session("groupid") & "') ;"
+
+            Label3.Text = SqlTxt
+        Next
+
+        cmd = New SqlCommand(SqlTxt, Conn)
+        dbRead = cmd.ExecuteNonQuery()
+        Conn.Close()
+
+        Response.Redirect("~/Equ_Group3.aspx")
+
+
+
+
+
+
+
+
+    End Sub
+
+    Protected Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click
+        Response.Redirect("~/add_Group.aspx")
+    End Sub
+
+    Protected Sub Button5_Click(sender As Object, e As EventArgs) Handles Button5.Click
+        Response.Redirect("~/Equ_Group3.aspx")
+    End Sub
+End Class
             Label3.Text = SqlTxt
         Next
 
