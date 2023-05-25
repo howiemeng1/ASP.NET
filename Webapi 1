@@ -1,0 +1,192 @@
+
+此api為傳2個值過去 回傳值相加 + "哈哈哈"
+
+
+主頁面.aspx  略  (兩個textbox  一個button)
+主頁面.aspx.vb
+Imports System.Net.Http
+Imports Newtonsoft.Json
+Imports webapitest.AnalysisController
+Imports System.Text
+
+
+Public Class WebForm1
+    Inherits System.Web.UI.Page
+
+    Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+
+    End Sub
+
+    Protected Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+        Dim value1 As String = TextBox1.Text
+        Dim value2 As String = TextBox2.Text
+
+        Dim result As String = SendRequestToWebAPI(value1, value2)
+
+        ' 在這裡處理回傳的結果
+    End Sub
+
+    Private Function SendRequestToWebAPI(ByVal value1 As String, ByVal value2 As String) As String
+        Dim text1 As String = TextBox1.Text
+        Dim text2 As String = TextBox2.Text
+
+        Dim apiUrl As String = "http://localhost:55160/api/analysis"
+        Dim httpClient As New HttpClient()
+
+        Dim input As New AnalysisInput() With {
+            .Text1 = text1,
+            .Text2 = text2
+        }
+
+        Dim jsonInput As String = JsonConvert.SerializeObject(input)
+        Dim content As New StringContent(jsonInput, Encoding.UTF8, "application/json")
+
+        Dim response As HttpResponseMessage = httpClient.PutAsync(apiUrl, content).Result
+
+        If response.IsSuccessStatusCode Then
+            Dim jsonResponse As String = response.Content.ReadAsStringAsync().Result
+            ' 使用回應結果進行後續處理
+            Dim resultObj As AnalysisResponse = JsonConvert.DeserializeObject(Of AnalysisResponse)(jsonResponse)
+            Label1.Text = resultObj.Result
+            Return resultObj.Result
+        Else
+            ' 處理錯誤狀況
+            Label1.Text = "發生錯誤"
+            Return String.Empty
+        End If
+    End Function
+End Class
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+這裡一定要加，不然無法連到api row90~92
+Global.aspx.vb
+Imports System.Web.Optimization
+Imports System.Web.Routing
+Imports System.Web.Http
+
+Public Class Global_asax
+    Inherits HttpApplication
+
+    Sub Application_Start(ByVal sender As Object, ByVal e As EventArgs)
+        ' 在應用程式啟動時引發
+        BundleConfig.RegisterBundles(BundleTable.Bundles)
+        AuthConfig.RegisterOpenAuth()
+        RouteConfig.RegisterRoutes(RouteTable.Routes)
+
+
+
+
+        RouteTable.Routes.MapHttpRoute(name:="DefaultApi", _
+            routeTemplate:="api/{controller}/{id}", _
+            defaults:=New With {.id = System.Web.Http.RouteParameter.Optional})
+
+
+
+    End Sub
+
+    Sub Application_BeginRequest(ByVal sender As Object, ByVal e As EventArgs)
+        ' 在每個要求開頭引發
+    End Sub
+
+    Sub Application_AuthenticateRequest(ByVal sender As Object, ByVal e As EventArgs)
+        ' 在一開始嘗試驗證使用時引發
+    End Sub
+
+    Sub Application_Error(ByVal sender As Object, ByVal e As EventArgs)
+        ' 在錯誤發生時引發
+    End Sub
+
+    Sub Application_End(ByVal sender As Object, ByVal e As EventArgs)
+        ' 在應用程式結束時引發
+    End Sub
+End Class
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ValuesController(名子一定要這樣 XXXXXController 後面不能有數字) 
+ValuesController.vb
+
+Imports System.Net
+Imports System.Web.Http
+Imports System.Net.Http
+Imports Newtonsoft.Json
+
+Public Class AnalysisController
+    Inherits ApiController
+
+    ' GET api/<controller>
+    Public Function GetValues() As IEnumerable(Of String)
+        Return New String() {"Hello from Web API"}
+    End Function
+
+
+    ' GET api/<controller>/5
+    Public Function GetValue(ByVal id As Integer) As String
+        Return "value"
+    End Function
+
+    
+
+    ' PUT api/<controller>/5
+
+    Public Function Put(<FromBody()> ByVal input As AnalysisInput) As HttpResponseMessage
+        Dim result As String = input.Text1 & input.Text2 & "QQPR"
+
+        Dim responseObj As New AnalysisResponse()
+        responseObj.Message = "Analysis completed"
+        responseObj.Result = result
+
+        Dim jsonResponse As String = JsonConvert.SerializeObject(responseObj)
+        Dim response As New HttpResponseMessage(HttpStatusCode.OK)
+        response.Content = New StringContent(jsonResponse, Encoding.UTF8, "application/json")
+
+        Return response
+    End Function
+
+
+    ' DELETE api/<controller>/5
+    Public Sub DeleteValue(ByVal id As Integer)
+
+    End Sub
+
+    
+End Class
+
+
+Public Class AnalysisInput
+    Public Property Text1 As String
+    Public Property Text2 As String
+End Class
+
+Public Class AnalysisResponse
+    Public Property Message As String
+    Public Property Result As String
+End Class
