@@ -1,5 +1,5 @@
 修改
-<httpRuntime maxRequestLength="2147483647" executionTimeout="300" />    '修改成2G 及 最多等待300秒
+<httpRuntime maxRequestLength="2147483647" executionTimeout="300" />    '修改成2G(最大) 及 最多等待300秒
 
 
 IIS7之後須多加入
